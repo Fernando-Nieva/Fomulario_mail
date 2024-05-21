@@ -7,8 +7,10 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const RECEIVER_EMAIL = "nieva.cronos@gmail.com"; // Email fijo al que se enviarán los datos
 
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 const oAuth2Client = new google.auth.OAuth2(
@@ -33,7 +35,7 @@ app.get("/auth/google/callback", async (req, res) => {
   const code = req.query.code;
 
   if (!code) {
-    return res.status(400).send("Falta el código de autorización.");
+    return res.status(400).json({ message: "Falta el código de autorización." });
   }
 
   try {
@@ -46,15 +48,15 @@ app.get("/auth/google/callback", async (req, res) => {
     res.redirect("/");
   } catch (error) {
     console.error("Error al obtener el token de acceso:", error);
-    res.status(500).send("Error al obtener el token de acceso.");
+    res.status(500).json({ message: "Error al obtener el token de acceso." });
   }
 });
 
 app.post("/send-email", async (req, res) => {
-  const { to, subject, text } = req.body;
+  const { email, nombre, apellido, mensaje } = req.body;
 
-  if (!to || !subject || !text) {
-    return res.status(400).send("Faltan campos en el formulario.");
+  if (!email || !nombre || !apellido || !mensaje) {
+    return res.status(400).json({ message: "Faltan campos en el formulario." });
   }
 
   try {
@@ -77,23 +79,23 @@ app.post("/send-email", async (req, res) => {
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
-      to: to,
-      subject: subject,
-      text: text,
+      to: RECEIVER_EMAIL, // Email fijo
+      subject: `Mensaje de ${nombre} ${apellido}`,
+      text: `Nombre: ${nombre}\nApellido: ${apellido}\nEmail: ${email}\n\nMensaje:\n${mensaje}`,
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
         console.error("Error al enviar el correo:", error);
-        res.status(500).send("Error al enviar el correo: " + error.message);
+        res.status(500).json({ message: "Error al enviar el correo: " + error.message });
       } else {
         console.log("Correo enviado:", info.response);
-        res.status(200).send("Correo enviado con éxito.");
+        res.status(200).json({ message: "Correo enviado con éxito." });
       }
     });
   } catch (error) {
     console.error("Error al configurar el correo:", error);
-    res.status(500).send("Error al configurar el correo: " + error.message);
+    res.status(500).json({ message: "Error al configurar el correo: " + error.message });
   }
 });
 
