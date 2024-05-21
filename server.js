@@ -7,7 +7,6 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const RECEIVER_EMAIL = "nieva.cronos@gmail.com"; // Email fijo al que se enviarán los datos
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -79,7 +78,7 @@ app.post("/send-email", async (req, res) => {
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
-      to: RECEIVER_EMAIL, // Email fijo
+      to: process.env.RECEIVER_EMAIL, // Email fijo desde .env
       subject: `Mensaje de ${nombre} ${apellido}`,
       text: `Nombre: ${nombre}\nApellido: ${apellido}\nEmail: ${email}\n\nMensaje:\n${mensaje}`,
     };
